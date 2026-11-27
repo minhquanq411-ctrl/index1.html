@@ -1,0 +1,710 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#050a14;color:#e8f4ff}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AotForms Patcher</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+:root {
+  --bg:          #050a14;
+  --panel:       #080f1e;
+  --panel2:      #0c1428;
+  --border:      #0e2040;
+  --border2:     #163060;
+  --cyan:        #00e5ff;
+  --cyan-glow:   #00e5ff44;
+  --orange:      #ff6d00;
+  --orange-glow: #ff6d0044;
+  --yellow:      #ffe600;
+  --yellow-glow: #ffe60033;
+  --green:       #39ff14;
+  --green-glow:  #39ff1433;
+  --fg:          #e8f4ff;
+  --fg2:         #98b8d8;
+  --muted:       #2a4060;
+  --label:       #5888b8;
+  --input-bg:    #040810;
+  --input-border:#0e2a50;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-ui:   'Inter', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  padding-block: 20px;
+  padding-left: max(14px, env(safe-area-inset-left, 0px));
+  padding-right: max(14px, env(safe-area-inset-right, 0px));
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ══ WAVE BACKGROUND ══ */
+.wave-bg {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
+}
+.wave-bg svg { position: absolute; bottom: 0; width: 200%; height: 160px; }
+.wave1 { animation: waveMove 8s linear infinite; opacity: 0.18; }
+.wave2 { animation: waveMove 12s linear infinite reverse; opacity: 0.10; bottom: 10px !important; }
+.wave3 { animation: waveMove 6s linear infinite; opacity: 0.07; bottom: 20px !important; }
+@keyframes waveMove {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+/* top glow blobs */
+.blob1 {
+  position: fixed; top: -80px; left: 50%; transform: translateX(-50%);
+  width: 70vw; height: 200px;
+  background: radial-gradient(ellipse, #00e5ff18 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+  animation: blobbreathe 6s ease-in-out infinite;
+}
+.blob2 {
+  position: fixed; bottom: 10%; right: -10%;
+  width: 40vw; height: 300px;
+  background: radial-gradient(ellipse, #ff6d0012 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+@keyframes blobbreathe {
+  0%,100% { opacity: 0.6; transform: translateX(-50%) scaleX(1); }
+  50%      { opacity: 1;   transform: translateX(-50%) scaleX(1.08); }
+}
+
+/* all real content above fixed bg */
+.header, .card, #outputCard { position: relative; z-index: 1; }
+
+/* ══ HEADER ══ */
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.logo {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00e5ff, #0070cc, #ff6d00);
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px;
+  color: #fff; letter-spacing: -0.5px;
+  box-shadow: 0 0 24px var(--cyan-glow), 0 0 8px var(--orange-glow);
+  animation: logospin 4s ease-in-out infinite;
+}
+@keyframes logospin {
+  0%,100% { box-shadow: 0 0 20px var(--cyan-glow), 0 2px 8px #0008; }
+  50%      { box-shadow: 0 0 36px #00e5ffaa, 0 0 16px var(--orange-glow); }
+}
+.header-text h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; color: var(--fg); }
+.header-text p  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.badge {
+  display: inline-block; font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #00e5ff22, #ff6d0022);
+  border: 1px solid #00e5ff55;
+  color: var(--cyan); letter-spacing: 0.5px; margin-left: 6px;
+}
+
+/* ══ CARDS ══ */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px; margin-bottom: 12px;
+  overflow: hidden; position: relative;
+  box-shadow: 0 2px 32px #00e5ff06, 0 1px 8px #0009;
+}
+/* animated shimmer line on top */
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--cyan) 30%,
+    var(--yellow) 50%,
+    var(--orange) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+  opacity: 0.5;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #00e5ff05 0%, transparent 55%, #ff6d0003 100%);
+  pointer-events: none;
+}
+
+/* ══ SECTION TITLE ══ */
+.section-title {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.8px;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+  background: linear-gradient(90deg, var(--cyan), var(--yellow), var(--orange));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 5px var(--cyan-glow));
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(to right, var(--cyan) 0%, var(--orange) 60%, transparent 100%);
+  opacity: 0.3;
+}
+
+/* ══ FIELDS ══ */
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 9px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label {
+  font-size: 10px; font-weight: 600; color: var(--label);
+  font-family: var(--font-mono); letter-spacing: 0.5px;
+}
+.field input[type="text"], .field input[type="number"] {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 7px; color: var(--fg);
+  font-family: var(--font-mono); font-size: 12px;
+  padding: 7px 10px; width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  min-width: 0;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  background: #040c20;
+  box-shadow: 0 0 0 2px var(--cyan-glow), 0 0 14px var(--cyan-glow);
+}
+.field input.changed {
+  border-color: var(--orange);
+  color: var(--orange);
+  box-shadow: 0 0 0 1px var(--orange-glow), 0 0 10px var(--orange-glow);
+}
+
+/* ══ SLIDER ══ */
+.strength-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.strength-label-row { display: flex; justify-content: space-between; align-items: center; }
+.strength-label-row label {
+  font-size: 10px; font-weight: 600; color: var(--label);
+  font-family: var(--font-mono); letter-spacing: 0.5px;
+}
+.strength-value {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  background: linear-gradient(90deg, var(--cyan), var(--yellow));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-variant-numeric: tabular-nums;
+  filter: drop-shadow(0 0 6px var(--cyan-glow));
+  min-width: 42px; text-align: right;
+}
+/* Slider — inline bg set by JS */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%; height: 6px; border-radius: 3px;
+  outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--cyan) 35%, var(--input-border) 35%);
+  transition: box-shadow 0.2s;
+}
+input[type="range"]:focus { box-shadow: 0 0 0 3px var(--cyan-glow); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--yellow), var(--cyan), #0070ff);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 10px var(--cyan-glow), 0 0 6px var(--yellow-glow), 0 2px 8px #0008;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.28);
+  box-shadow: 0 0 22px #00e5ffcc, 0 0 12px var(--yellow-glow);
+}
+
+.hint { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+/* ══ BUTTONS ══ */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.btn {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  padding: 11px 22px; border-radius: 9px; border: none; cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
+  flex-shrink: 0; position: relative; overflow: hidden;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary {
+  background: linear-gradient(135deg, #00aadd, #0055bb);
+  color: #fff;
+  box-shadow: 0 4px 18px var(--cyan-glow), 0 1px 4px #0007;
+}
+.btn-primary:hover { opacity: 0.9; box-shadow: 0 6px 28px #00e5ff88; }
+/* neon sweep on hover */
+.btn-primary::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, #fff2, transparent);
+  transition: left 0.4s;
+}
+.btn-primary:hover::after { left: 160%; }
+.btn-secondary {
+  background: transparent; color: var(--label);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover {
+  border-color: var(--orange); color: var(--orange);
+  box-shadow: 0 0 10px var(--orange-glow);
+}
+
+/* ══ SELECT ══ */
+.styled-select {
+  background: var(--input-bg); border: 1px solid var(--input-border);
+  border-radius: 7px; color: var(--fg);
+  font-family: var(--font-mono); font-size: 12px;
+  padding: 7px 10px; width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.styled-select:focus {
+  outline: none; border-color: var(--cyan);
+  box-shadow: 0 0 0 2px var(--cyan-glow);
+}
+
+/* ══ CHECKBOX ══ */
+.check-label {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; color: var(--label);
+  user-select: none;
+}
+.check-label input[type="checkbox"] {
+  accent-color: var(--cyan); width: 15px; height: 15px; cursor: pointer;
+}
+.check-label:hover { color: var(--cyan); }
+
+/* ══ TABS ══ */
+.output-tabs {
+  display: flex; gap: 2px; margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  padding: 7px 16px; background: none; border: none;
+  border-bottom: 2px solid transparent; color: var(--muted);
+  cursor: pointer; letter-spacing: 0.8px; margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn.active {
+  color: var(--cyan); border-bottom-color: var(--cyan);
+  text-shadow: 0 0 10px var(--cyan-glow);
+}
+.tab-btn:hover:not(.active) { color: var(--fg2); }
+
+/* ══ CODE BOX ══ */
+.code-box {
+  background: var(--input-bg); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 12px 14px; font-family: var(--font-mono);
+  font-size: 11px; line-height: 1.7; color: var(--green);
+  word-break: break-all; max-height: 200px; overflow-y: auto;
+  white-space: pre-wrap; min-width: 0; user-select: all; display: none;
+}
+.code-box.active { display: block; }
+
+/* ══ COPY ROW ══ */
+.copy-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.byte-count { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.btn-copy {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  padding: 6px 16px; background: transparent;
+  border: 1px solid var(--border2); border-radius: 6px;
+  color: var(--label); cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.btn-copy:hover, .btn-copy.copied {
+  border-color: var(--green); color: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+}
+
+/* ══ PATH BOX ══ */
+.path-box {
+  background: var(--input-bg); border: 1px solid var(--input-border);
+  border-radius: 8px; padding: 12px 14px; font-family: var(--font-mono);
+  font-size: 11px; color: var(--fg2); word-break: break-all; line-height: 1.9;
+}
+.path-box span { color: var(--muted); }
+
+/* ══ DOWNLOAD BUTTON ══ */
+.download-btn {
+  display: block; width: 100%; font-family: var(--font-mono);
+  font-size: 13px; font-weight: 700; padding: 15px;
+  border: none; border-radius: 10px; cursor: pointer; text-align: center;
+  letter-spacing: 0.5px; margin-top: 14px;
+  color: #030810;
+  background: linear-gradient(90deg, var(--cyan) 0%, var(--yellow) 50%, var(--orange) 100%);
+  background-size: 200% 100%;
+  transition: background-position 0.4s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px var(--cyan-glow), 0 2px 8px var(--orange-glow);
+  animation: btnwave 3s linear infinite;
+}
+@keyframes btnwave {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+.download-btn:hover { box-shadow: 0 6px 32px var(--cyan-glow), 0 4px 16px var(--orange-glow); }
+.download-btn:active { transform: scale(0.98); }
+.download-btn:disabled { opacity: 0.35; cursor: not-allowed; animation: none; box-shadow: none; }
+
+/* ══ INNER DIVIDER ══ */
+.inner-divider {
+  height: 1px; margin: 16px 0;
+  background: linear-gradient(to right, var(--border2), transparent);
+}
+
+/* ══ TOAST ══ */
+.toast {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%) translateY(80px);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  padding: 10px 24px; border-radius: 20px;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  color: #030810;
+  transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+  opacity: 0; pointer-events: none; white-space: nowrap; z-index: 200;
+  box-shadow: 0 4px 24px var(--cyan-glow), 0 2px 8px #0007;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+</style>
+
+<!-- Wave background -->
+<div class="wave-bg">
+  <!-- wave 1 cyan -->
+  <svg class="wave1" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#00e5ff" d="M0,80 C240,140 480,20 720,80 C960,140 1200,20 1440,80 L1440,160 L0,160 Z"/>
+  </svg>
+  <!-- wave 2 orange -->
+  <svg class="wave2" style="bottom:10px" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#ff6d00" d="M0,100 C200,40 400,130 720,90 C1040,50 1200,120 1440,70 L1440,160 L0,160 Z"/>
+  </svg>
+  <!-- wave 3 yellow -->
+  <svg class="wave3" style="bottom:20px" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#ffe600" d="M0,60 C360,120 720,20 1080,80 C1260,110 1380,50 1440,90 L1440,160 L0,160 Z"/>
+  </svg>
+</div>
+<div class="blob1"></div>
+<div class="blob2"></div>
+
+<div class="header">
+  <div class="logo">AOT</div>
+  <div class="header-text">
+    <h1>Make Adr Patcher <span class="badge">FF OB55</span></h1>
+    <p>nhập offset → build → tải libpatch.adr</p>
+  </div>
+</div>
+
+<!-- Aimbot Config -->
+<div class="card">
+  <div class="section-title">Aimbot Config</div>
+  <div class="strength-row">
+    <div class="strength-label-row">
+      <label>STRENGTH</label>
+      <span class="strength-value" id="strengthVal">35%</span>
+    </div>
+    <input type="range" id="strength" min="1" max="100" value="35" oninput="updateStrength(this)">
+    <div class="hint">35% = bám nhẹ, kéo tâm về đầu mượt, không snap</div>
+  </div>
+  <div class="field-grid">
+    <div class="field"><label>SMOOTH_FACTOR</label><input type="number" id="smooth" value="8.5" step="0.5" min="1" max="30" oninput="markChanged(this)"></div>
+    <div class="field"><label>FOV_CLAMP (°)</label><input type="number" id="fov" value="45" step="5" min="10" max="180" oninput="markChanged(this)"></div>
+    <div class="field"><label>RECOIL_REDUCE (%)</label><input type="number" id="recoil" value="35" step="5" min="0" max="100" oninput="markChanged(this)"></div>
+    <div class="field"><label>HEAD_BONE_INDEX</label><input type="number" id="bone" value="0" step="1" min="0" max="20" oninput="markChanged(this)"></div>
+  </div>
+</div>
+
+<!-- Offsets -->
+<div class="card">
+  <div class="section-title">Offsets</div>
+  <div class="field-grid" id="offsetGrid"></div>
+</div>
+
+<!-- Extra Offsets -->
+<div class="card">
+  <div class="section-title">Extra Offsets</div>
+  <div class="field-grid" id="extraGrid"></div>
+</div>
+
+<!-- Weapon Mods -->
+<div class="card">
+  <div class="section-title">Weapon Mods</div>
+  <div class="field-grid">
+    <div class="field"><label>BULLET_SPEED ×</label><input type="number" id="bulletSpeedMul" value="1.0" step="0.1" min="0.1" max="5" oninput="markChanged(this)"></div>
+    <div class="field"><label>DAMAGE ×</label><input type="number" id="damageMul" value="1.0" step="0.1" min="0.1" max="5" oninput="markChanged(this)"></div>
+    <div class="field"><label>FIRE_RATE ×</label><input type="number" id="fireRateMul" value="1.0" step="0.1" min="0.1" max="3" oninput="markChanged(this)"></div>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap">
+    <label class="check-label"><input type="checkbox" id="chkNoSpread"> NO_SPREAD</label>
+    <label class="check-label"><input type="checkbox" id="chkNoBulletDrop"> NO_BULLET_DROP</label>
+  </div>
+</div>
+
+<!-- Crosshair -->
+<div class="card">
+  <div class="section-title">Crosshair / Aim Point</div>
+  <div class="field-grid">
+    <div class="field">
+      <label>HEAD_LOCK</label>
+      <select id="headLock" class="styled-select">
+        <option value="0">Off</option>
+        <option value="1" selected>Soft (smooth)</option>
+        <option value="2">Hard (snap)</option>
+      </select>
+    </div>
+    <div class="field"><label>AIM_Y_OFFSET</label><input type="number" id="aimYOffset" value="0" step="1" min="-50" max="50" oninput="markChanged(this)"></div>
+    <div class="field"><label>AIM_X_OFFSET</label><input type="number" id="aimXOffset" value="0" step="1" min="-50" max="50" oninput="markChanged(this)"></div>
+    <div class="field">
+      <label>TARGET_BONE</label>
+      <select id="targetBone" class="styled-select">
+        <option value="0">Head</option>
+        <option value="1">Neck</option>
+        <option value="2">Chest</option>
+        <option value="3">Hip</option>
+      </select>
+    </div>
+  </div>
+  <div class="hint" style="margin-top:10px">AIM_Y_OFFSET: âm = thấp hơn, dương = cao hơn so với bone target</div>
+
+  <div class="inner-divider"></div>
+  <div class="section-title" style="margin-bottom:12px">Recoil Control</div>
+  <div class="strength-row" style="margin-bottom:12px">
+    <div class="strength-label-row">
+      <label>RECOIL_CONTROL</label>
+      <span class="strength-value" id="recoilCtrlVal">80%</span>
+    </div>
+    <input type="range" id="recoilCtrl" min="0" max="100" value="80" oninput="updateSlider(this,'recoilCtrlVal')">
+    <div class="hint">100% = không rung hoàn toàn, 0% = giữ nguyên recoil gốc</div>
+  </div>
+  <label class="check-label"><input type="checkbox" id="chkRecoilCtrl" checked> BẬT RECOIL CONTROL</label>
+
+  <div class="inner-divider"></div>
+  <div class="section-title" style="margin-bottom:12px">Pull To Head</div>
+  <div class="field-grid">
+    <div class="field"><label>PULL_STRENGTH</label><input type="number" id="pullStrength" value="0.6" step="0.05" min="0" max="1" oninput="markChanged(this)"></div>
+    <div class="field"><label>PULL_RADIUS (px)</label><input type="number" id="pullRadius" value="120" step="10" min="10" max="500" oninput="markChanged(this)"></div>
+    <div class="field"><label>PULL_SPEED</label><input type="number" id="pullSpeed" value="4.0" step="0.5" min="0.5" max="20" oninput="markChanged(this)"></div>
+  </div>
+  <div class="hint" style="margin-top:8px">PULL kéo tâm vào đầu khi aim trong PULL_RADIUS — mày kéo gần đầu nó tự vào</div>
+  <label class="check-label" style="margin-top:10px"><input type="checkbox" id="chkPull" checked> BẬT PULL TO HEAD</label>
+</div>
+
+<!-- Bones -->
+<div class="card">
+  <div class="section-title">Bones</div>
+  <div class="field-grid" id="bonesGrid"></div>
+</div>
+
+<!-- Build -->
+<div class="card">
+  <div class="section-title">Build</div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="buildPatch()">⚡ BUILD libpatch.adr</button>
+    <button class="btn btn-secondary" onclick="resetAll()">Reset offsets</button>
+  </div>
+</div>
+
+<!-- Output -->
+<div class="card" id="outputCard" style="display:none">
+  <div class="section-title">Output</div>
+  <div class="output-tabs">
+    <button class="tab-btn active" onclick="switchTab('b64',this)">BASE64</button>
+    <button class="tab-btn" onclick="switchTab('hex',this)">HEX</button>
+    <button class="tab-btn" onclick="switchTab('bin',this)">BINARY</button>
+  </div>
+  <div class="code-box active" id="tab-b64"></div>
+  <div class="code-box" id="tab-hex"></div>
+  <div class="code-box" id="tab-bin"></div>
+  <div class="copy-row">
+    <span class="byte-count" id="byteCount"></span>
+    <button class="btn-copy" id="copyBtn" onclick="copyCode()">Copy</button>
+  </div>
+  <div style="margin-top:20px">
+    <div class="section-title">Cài vào game</div>
+    <div class="path-box">
+      <span>/storage/emulated/0/</span>Download/<strong style="color:var(--cyan)">libpatch.adr</strong><br>
+      <span style="color:var(--muted)">→ file tải về tự vào thư mục Download</span>
+    </div>
+  </div>
+  <button class="download-btn" id="dlBtn" onclick="downloadPatch()">↓ Tải libpatch.adr</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const EXTRA_OFFSETS = {
+  NoSpread:0x9A, NoBulletDrop:0x9B, BulletSpeed:0x6C, DamageMulti:0x70,
+  MagSize:0x88, FireRate:0x7C, RecoilVertical:0xA0, RecoilHorizontal:0xA4,
+  RecoilPattern:0xA8, RecoilRecovery:0xAC, SpreadAngle:0xB0, SpreadMoving:0xB4,
+  SpreadCrouching:0xB8, RecoilScale:0xBC,
+};
+const DEFAULT_OFFSETS = {
+  InitBase:0xA342EFC, StaticClass:0x5C, CurrentMatch:0x50, MatchStatus:0x8C,
+  LocalPlayer:0xC8, DictionaryEntities:0x68, Camera:0x30, Player_Data:0x78,
+  Player_ShadowBase:0x14A0, XPose:0x78, CurrentObserver:0xB4, ObserverPlayer:0x28,
+  UnlimitedAmmo:0xE0, GameTimer:0x10, FixedDeltaTime:0x24, Player_IsDead:0x7C,
+  Player_Name:0x380, LocalPlayerAttributes:0x3A0, AimbotVisible:0x4A4, isBotOffs:0x1B0,
+  AvatarManager:0x320, Avatar:0xD0, Avatar_Data:0x30, Avatar_Data_IsTeam:0x74,
+  Avatar_IsVisible:0xC1, FollowCamera:0x5C0, AimRotation:0x2E0,
+  MainCameraTransform:0x300, ViewMatrix:0xE4, Weapon:0x2C0, WeaponData:0x68,
+  WeaponRecoil:0xC, NoReload:0x99, IS_FIRING:0x540, weaponinfo:0x978,
+  WeaponInfo:0x64, WeaponID:0x14, WeaponOnHand:0x54, guntipposition:0x38,
+  bullet_hit:0x2C, SilentFiring:0x6C0, SilentHit:0x7D0, Silents:0x38,
+  Silentr:0x2C, HeadCollider:0x360, ReplaceCollider:0x54,
+};
+const DEFAULT_BONES = {
+  Head:0x494, Spine:0x49C, Hip:0x498, Root:0x4A8,
+  LeftAnkle:0x4B0, RightAnkle:0x4B4, LeftFoot:0x4B8, RightFoot:0x4BC,
+  LeftShoulder:0x4C8, RightShoulder:0x4CC, RightHand:0x4D0, LeftHand:0x4D4,
+  RightElbow:0x4D8, LeftElbow:0x4DC,
+};
+
+let currentTab = 'b64', lastBlob = null;
+
+function setSliderBg(el) {
+  const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.background = `linear-gradient(to right, #00e5ff ${pct}%, #0e2a50 ${pct}%)`;
+}
+function updateStrength(el) { setSliderBg(el); document.getElementById('strengthVal').textContent = el.value + '%'; }
+function updateSlider(el, id) { setSliderBg(el); document.getElementById(id).textContent = el.value + '%'; }
+
+function buildFields(gridId, defaults, prefix) {
+  const grid = document.getElementById(gridId); grid.innerHTML = '';
+  for (const [name, val] of Object.entries(defaults)) {
+    const div = document.createElement('div'); div.className = 'field';
+    div.innerHTML = `<label>${name}</label><input type="text" id="${prefix}${name}" value="0x${val.toString(16).toUpperCase()}" oninput="markChanged(this)">`;
+    grid.appendChild(div);
+  }
+}
+function markChanged(el) { el.classList.toggle('changed', el.value !== el.defaultValue); }
+
+function resetAll() {
+  for (const [n,v] of Object.entries(DEFAULT_OFFSETS)) { const el=document.getElementById('off_'+n); if(el){el.value='0x'+v.toString(16).toUpperCase();el.classList.remove('changed');} }
+  for (const [n,v] of Object.entries(DEFAULT_BONES))   { const el=document.getElementById('bone_'+n); if(el){el.value='0x'+v.toString(16).toUpperCase();el.classList.remove('changed');} }
+  for (const [n,v] of Object.entries(EXTRA_OFFSETS))   { const el=document.getElementById('extra_'+n); if(el){el.value='0x'+v.toString(16).toUpperCase();el.classList.remove('changed');} }
+  ['bulletSpeedMul','damageMul','fireRateMul'].forEach((id,i)=>document.getElementById(id).value=['1.0','1.0','1.0'][i]);
+  document.getElementById('chkNoSpread').checked=false; document.getElementById('chkNoBulletDrop').checked=false;
+  document.getElementById('aimYOffset').value='0'; document.getElementById('aimXOffset').value='0';
+  document.getElementById('headLock').value='1'; document.getElementById('targetBone').value='0';
+  const rc=document.getElementById('recoilCtrl'); rc.value='80'; updateSlider(rc,'recoilCtrlVal');
+  document.getElementById('chkRecoilCtrl').checked=true;
+  document.getElementById('pullStrength').value='0.6'; document.getElementById('pullRadius').value='120'; document.getElementById('pullSpeed').value='4.0';
+  document.getElementById('chkPull').checked=true;
+  showToast('Reset về OB55 defaults');
+}
+
+function parseHex(s){const v=parseInt(s.trim().replace(/^0x/i,''),16);return isNaN(v)?0:v;}
+function u32(v){const b=new ArrayBuffer(4);new DataView(b).setUint32(0,v,true);return new Uint8Array(b);}
+function f32(v){const b=new ArrayBuffer(4);new DataView(b).setFloat32(0,v,true);return new Uint8Array(b);}
+function concat(a){const t=a.reduce((s,x)=>s+x.length,0),o=new Uint8Array(t);let i=0;for(const x of a){o.set(x,i);i+=x.length;}return o;}
+
+function buildPatch() {
+  const strength=parseInt(document.getElementById('strength').value)/100;
+  const smooth=parseFloat(document.getElementById('smooth').value);
+  const fov=parseFloat(document.getElementById('fov').value);
+  const recoil=parseInt(document.getElementById('recoil').value)/100;
+  const boneIdx=parseInt(document.getElementById('bone').value);
+  const offs={};
+  for(const n of Object.keys(DEFAULT_OFFSETS)){const el=document.getElementById('off_'+n);offs[n]=el?parseHex(el.value):DEFAULT_OFFSETS[n];}
+  const bones={};
+  for(const n of Object.keys(DEFAULT_BONES)){const el=document.getElementById('bone_'+n);bones[n]=el?parseHex(el.value):DEFAULT_BONES[n];}
+  const enc=new TextEncoder(),parts=[];
+  parts.push(new Uint8Array([0x41,0x44,0x52,0x50]),u32(1));
+  const s1p=[];for(const[n,v]of Object.entries(offs)){const nb=enc.encode(n);s1p.push(new Uint8Array([nb.length]),nb,u32(v));}
+  const s1=concat(s1p);parts.push(new Uint8Array([0x01]),u32(s1.length),s1);
+  const s2p=[];for(const[n,v]of Object.entries(bones)){const nb=enc.encode(n);s2p.push(new Uint8Array([nb.length]),nb,u32(v));}
+  const s2=concat(s2p);parts.push(new Uint8Array([0x02]),u32(s2.length),s2);
+  const s3=concat([f32(strength),f32(smooth),f32(fov),u32(boneIdx),f32(recoil),u32(offs.AvatarManager||0),u32(offs.Avatar||0),u32(offs.Avatar_Data||0),u32(offs.HeadCollider||0),u32(offs.AimRotation||0),u32(offs.ViewMatrix||0),u32(offs.AimbotVisible||0)]);
+  parts.push(new Uint8Array([0x03]),u32(s3.length),s3);
+  const noSpread=document.getElementById('chkNoSpread').checked?1:0;
+  const noBulletDrop=document.getElementById('chkNoBulletDrop').checked?1:0;
+  const bSpeedMul=parseFloat(document.getElementById('bulletSpeedMul').value)||1;
+  const dmgMul=parseFloat(document.getElementById('damageMul').value)||1;
+  const frMul=parseFloat(document.getElementById('fireRateMul').value)||1;
+  const extraOffs={};
+  for(const n of Object.keys(EXTRA_OFFSETS)){const el=document.getElementById('extra_'+n);extraOffs[n]=el?parseHex(el.value):EXTRA_OFFSETS[n];}
+  const s4p=[];for(const[n,v]of Object.entries(extraOffs)){const nb=enc.encode(n);s4p.push(new Uint8Array([nb.length]),nb,u32(v));}
+  const s4=concat([...s4p,new Uint8Array([noSpread,noBulletDrop]),f32(bSpeedMul),f32(dmgMul),f32(frMul)]);
+  parts.push(new Uint8Array([0x04]),u32(s4.length),s4);
+  const headLock=parseInt(document.getElementById('headLock').value);
+  const aimY=parseInt(document.getElementById('aimYOffset').value)||0;
+  const aimX=parseInt(document.getElementById('aimXOffset').value)||0;
+  const tgtBone=parseInt(document.getElementById('targetBone').value);
+  const rcOn=document.getElementById('chkRecoilCtrl').checked?1:0;
+  const rcPct=parseInt(document.getElementById('recoilCtrl').value)/100;
+  const pullOn=document.getElementById('chkPull').checked?1:0;
+  const pullStr=parseFloat(document.getElementById('pullStrength').value)||0.6;
+  const pullRad=parseFloat(document.getElementById('pullRadius').value)||120;
+  const pullSpd=parseFloat(document.getElementById('pullSpeed').value)||4.0;
+  const s5=concat([u32(headLock),u32(tgtBone),f32(aimX),f32(aimY),new Uint8Array([rcOn]),f32(rcPct),new Uint8Array([pullOn]),f32(pullStr),f32(pullRad),f32(pullSpd)]);
+  parts.push(new Uint8Array([0x05]),u32(s5.length),s5);
+  const noise=new Uint8Array(16);crypto.getRandomValues(noise);
+  const s6=concat([new Uint8Array([0xDE,0xAD]),noise,new Uint8Array([0xBE,0xEF])]);
+  parts.push(new Uint8Array([0x06]),u32(s6.length),s6);
+  lastBlob=concat(parts);
+  const b64=btoa(String.fromCharCode(...lastBlob));
+  const hex=[...lastBlob].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const binPrev=[...lastBlob.slice(0,32)].map(b=>b.toString(2).padStart(8,'0')).join(' ')+' ...';
+  document.getElementById('tab-b64').textContent=b64;
+  document.getElementById('tab-hex').textContent=(hex.match(/.{1,64}/g)||[hex]).join('\n');
+  document.getElementById('tab-bin').textContent=binPrev;
+  document.getElementById('byteCount').textContent=lastBlob.length+' bytes';
+  document.getElementById('outputCard').style.display='';
+  switchTab(currentTab,null);
+  showToast('⚡ Built — '+lastBlob.length+' bytes');
+}
+
+function switchTab(id,btn) {
+  currentTab=id;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.code-box').forEach(b=>b.classList.remove('active'));
+  if(btn){btn.classList.add('active');}
+  else{document.querySelectorAll('.tab-btn').forEach(b=>{if(b.textContent.toLowerCase().includes(id))b.classList.add('active');});}
+  const box=document.getElementById('tab-'+id);if(box)box.classList.add('active');
+}
+
+function copyCode() {
+  const box=document.getElementById('tab-'+currentTab);const text=box?box.textContent:'';
+  const btn=document.getElementById('copyBtn');
+  const done=()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},1800);};
+  navigator.clipboard.writeText(text).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch{}document.body.removeChild(ta);});
+}
+
+async function downloadPatch() {
+  if(!lastBlob){showToast('⚡ Build trước đã');return;}
+  const btn=document.getElementById('dlBtn');btn.disabled=true;btn.textContent='...';
+  let saved=false;
+  try{const dl=await Promise.race([window.claude?.use('downloads'),new Promise(r=>setTimeout(()=>r(null),2500))]);if(dl){await dl.save({filename:'libpatch.adr',data:lastBlob});saved=true;showToast('↓ Đã lưu libpatch.adr');}}catch{}
+  if(!saved){try{const blob=new Blob([lastBlob],{type:'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='libpatch.adr';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1500);showToast('↓ Đang tải libpatch.adr');}catch(e){showToast('✗ Lỗi: '+(e?.message||'không tải được'));}}
+  setTimeout(()=>{btn.disabled=false;btn.textContent='↓ Tải libpatch.adr';},1500);
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tid);t._tid=setTimeout(()=>t.classList.remove('show'),2200);}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  setSliderBg(document.getElementById('strength'));
+  setSliderBg(document.getElementById('recoilCtrl'));
+  buildFields('offsetGrid',DEFAULT_OFFSETS,'off_');
+  buildFields('extraGrid',EXTRA_OFFSETS,'extra_');
+  buildFields('bonesGrid',DEFAULT_BONES,'bone_');
+});
+</script>
+</body></html>
